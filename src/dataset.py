@@ -29,7 +29,6 @@ class TestImageDataset(Dataset):
 
     def __getitem__(self, idx):
         image_name = self.data_df.iloc[idx]['img_num']
-
         image = Image.open(f"{DATA_PATH}/test/{image_name}")
 
         if self.transform:

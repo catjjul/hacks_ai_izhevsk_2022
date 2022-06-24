@@ -34,6 +34,7 @@ def train(
         model,
         criterion,
         optimizer,
+        scheduler,
         train_batch_gen,
         val_batch_gen,
         num_epochs=50
@@ -59,6 +60,7 @@ def train(
 
             loss.backward()
             optimizer.step()
+            scheduler.step()
             optimizer.zero_grad()
 
             train_loss += np.sum(loss.detach().cpu().numpy())
@@ -88,7 +90,6 @@ def train(
         val_acc /= len(val_batch_gen)
         history['loss']['val'].append(val_loss)
         history['acc']['val'].append(val_acc)
-
 
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, num_epochs, time.time() - start_time))

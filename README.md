@@ -30,10 +30,13 @@
 │   ├── __init__.py
 │   ├── config.py
 │   ├── dataset.py
+│   ├── aug_dataset.py
 │   ├── train_pipeline.py
+│   ├── augment.py
 │   └── transform.py
 ├── .gitignore
 ├── README.md
+├── plots.ipynb
 ├── requirements.txt
 └── main.py
 ``` 
@@ -44,7 +47,10 @@
 
 В папке *src* содержится код для обучения модели и вывода графиков (**train_pipeline.py**),
 конфигурационная информация (**config.py**), класс Датасет (**dataset.py**), преобразования для
-датасета (**transform.py**).
+датасета (**transform.py**), более интересные преобразования (**augment.py**), вывод разного рода картинок
+(**plots.ipynb**).
+
+В файле **requirements.txt** находятся необходимые для запуска библиотеки.
 
 ### 4 Подробное описание модели
 
@@ -55,8 +61,8 @@
 
 Для повышения качества модели использованы преобразования с помощью библиотеки Albumentations:
 
-- One of: HorizontalFlip, VerticalFlip, RandomRotate90
-- One of: HueSaturationValue, RandomGamma, RandomBrightnessContrast
-- ShiftScaleRotate
+- Одно из: HorizontalFlip, VerticalFlip, RandomRotate90 с вероятностью 1.
+- Одно из: HueSaturationValue, RandomGamma, RandomBrightnessContrast с вероятностью 1.
+- ShiftScaleRotate с вероятностью 1.
 
 Полученная в результате преобразованная выборка добавляется к основной и расширяет ее.
