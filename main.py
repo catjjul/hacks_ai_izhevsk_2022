@@ -11,12 +11,13 @@ from tqdm.auto import tqdm
 
 import torch
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 
 from torchvision import models
 
 from src.config import DEVICE, DATA_PATH, BATCH_SIZE, RANDOM_SEED
 from src.dataset import ImageDataset, TestImageDataset
+from src.aug_dataset import AugImageDataset
 from src.train_pipeline import train
 from src.transform import train_transform, valid_transform
 
@@ -112,7 +113,10 @@ n_classes = train_df.number_of_houses.nunique()  # 25
 train_data = ImageDataset(train_df, train_transform)
 print_random_pictures(train_data)
 
-train_dataset, val_dataset = train_test_split(train_data)
+train_aug_data = AugImageDataset(train_df, train_transform)
+train_data = ConcatDataset([train_data, train_aug_data])
+
+train_dataset, val_dataset = train_test_split(train_data, test_size=0.2, random_state=RANDOM_SEED)
 print(f'Training sample size: {len(train_dataset)}'
       f'Validation sample size: {len(val_dataset)}\n')
 
@@ -145,7 +149,7 @@ optimizer = torch.optim.Adam(filter(lambda x: x.requires_grad, model.parameters(
 model, history = train(
         model, criterion, optimizer,
         train_dataloader, val_dataloader,
-        num_epochs=10
+        num_epochs=12
     )
 
 print_classification_report(model, val_dataloader)
