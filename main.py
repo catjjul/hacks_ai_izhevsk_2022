@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, ConcatDataset
 
 from torchvision import models
 
-from src.config import DEVICE, DATA_PATH, BATCH_SIZE, RANDOM_SEED
+from src.config import DEVICE, DATA_PATH, BATCH_SIZE, RANDOM_SEED, N_EPOCHS
 from src.dataset import ImageDataset, TestImageDataset
 from src.aug_dataset import AugImageDataset
 from src.train_pipeline import train
@@ -49,13 +49,11 @@ def make_prediction(trained_model):
 
 seed_everything(RANDOM_SEED)
 
-# read csv and print some pictures
 train_df = pd.read_csv(DATA_PATH + 'train.csv')
 
-# clean data for cuda work
 train_df.number_of_houses = train_df.number_of_houses - 1
 train_df = train_df[train_df.number_of_houses < 25]
-n_classes = train_df.number_of_houses.nunique()  # 25
+n_classes = train_df.number_of_houses.nunique()
 
 train_data = ImageDataset(train_df, train_transform)
 
@@ -63,7 +61,7 @@ train_aug_data = AugImageDataset(train_df, train_augmentation)
 train_data = ConcatDataset([train_data, train_aug_data])
 
 train_dataset, val_dataset = train_test_split(train_data, test_size=0.2, random_state=RANDOM_SEED)
-print(f'Training sample size: {len(train_dataset)}'
+print(f'Train sample size: {len(train_dataset)}\n'
       f'Validation sample size: {len(val_dataset)}\n')
 
 train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=True)
@@ -73,7 +71,6 @@ model = models.resnet50(pretrained=True)
 
 for name, child in model.named_children():
     if name in ['layer3', 'layer4', 'fc']:
-        print(name + ' has been unfrozen')
         for param in child.parameters():
             param.requires_grad = True
     else:
@@ -90,14 +87,14 @@ model.fc.requires_grad = True
 
 model = model.to(DEVICE)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(filter(lambda x: x.requires_grad, model.parameters()), lr=0.001)
+optimizer = optim.Adam(filter(lambda x: x.requires_grad, model.parameters()), lr=0.00075)
 scheduler = optim.lr_scheduler.OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e3,
-                                          max_lr=1e-3, epochs=10, steps_per_epoch=len(train_dataloader))
+                                          max_lr=1e-3, epochs=N_EPOCHS, steps_per_epoch=len(train_dataloader))
 
 model, history = train(
-    model, criterion, optimizer,
+    model, criterion, optimizer, scheduler,
     train_dataloader, val_dataloader,
-    num_epochs=12
+    num_epochs=N_EPOCHS
 )
 
 make_prediction(model)
